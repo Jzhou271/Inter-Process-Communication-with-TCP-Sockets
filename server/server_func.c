@@ -104,3 +104,38 @@ void remove_file(int sock, const char *file_path) {
         printf("Attempted to remove non-existing file: %s\n", file_path);
     }
 }
+
+
+void *connection_handler(void *socket_desc) {
+    // Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    free(socket_desc);
+    char client_message[2000];
+
+    // Receive a message from client
+    ssize_t read_size = recv(sock, client_message, sizeof(client_message) - 1, 0);
+    if (read_size > 0) {
+        // Null terminate the string
+        client_message[read_size] = '\0';
+
+        // Parse the command and the file path from the received message
+        char *command = strtok(client_message, " ");
+        char *file_path = strtok(NULL, " ");
+
+        // Determine the command (WRITE, GET, RM) and execute the corresponding function
+        if (command && strcmp(command, "WRITE") == 0 && file_path) {
+            write_file(sock, file_path);
+        } else if (command && strcmp(command, "GET") == 0 && file_path) {
+            send_file_to_client(sock, file_path);
+        } else if (command && strcmp(command, "RM") == 0 && file_path) {
+            remove_file(sock, file_path);
+        } else {
+            // If the command is not supported or the file path is missing
+            printf("Unsupported command or missing file path.\n");
+        }
+    }
+
+    close(sock);
+    puts("Client disconnected");
+    return NULL;
+}
