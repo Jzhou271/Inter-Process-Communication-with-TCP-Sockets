@@ -1,4 +1,4 @@
-#include "../header/server.h"
+#include "server.h"
 #include <arpa/inet.h>
 #include <libgen.h>
 #include <stdio.h>

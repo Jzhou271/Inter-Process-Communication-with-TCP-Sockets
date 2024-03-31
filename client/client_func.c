@@ -1,4 +1,4 @@
-#include "../header/client.h"
+#include "client.h"
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>

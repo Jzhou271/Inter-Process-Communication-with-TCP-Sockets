@@ -1,25 +1,19 @@
 CC = gcc
 CFLAGS = -Wall -Iheader
-SRC_DIR = source
-HEADER_DIR = header
-MAIN_DIR = main
-# Update executable files list
-EXECUTABLES = client server
 
-# Source files
-SRCS = $(SRC_DIR)/client_func.c
-SERVER_SRCS = $(SRC_DIR)/server_func.c
+# Update executable files list
+EXECUTABLES = client/client server/server
 
 # Default target
 all: $(EXECUTABLES)
 
 # Compile and link each executable
-client: $(MAIN_DIR)/client.c $(SRCS)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBS)
+client/client: client/client.c client/client_func.c client/client.h
+	$(CC) $(CFLAGS) client/client.c client/client_func.c -o client/client 
 
-server: $(MAIN_DIR)/server.c $(SERVER_SRCS)
-	$(CC) $(CFLAGS) $^ -o $@
+server/server: server/server.c server/server_func.c server/server.h
+	$(CC) $(CFLAGS) server/server.c server/server_func.c -o server/server
 
 # Clean up
 clean:
-	rm -f $(EXECUTABLES) $(SRC_DIR)/*.o disk/*.txt
+	rm -f $(EXECUTABLES) client/local/* server/remote/*
