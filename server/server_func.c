@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <errno.h>
+#include <pthread.h>
 
 // Function to create a directory if it does not already exist
 void create_dir_if_not_exists(const char *file_path) {
@@ -124,11 +125,17 @@ void *connection_handler(void *socket_desc) {
 
         // Determine the command (WRITE, GET, RM) and execute the corresponding function
         if (command && strcmp(command, "WRITE") == 0 && file_path) {
+            pthread_mutex_lock(&file_mutex);
             write_file(sock, file_path);
+            pthread_mutex_unlock(&file_mutex);
         } else if (command && strcmp(command, "GET") == 0 && file_path) {
+            pthread_mutex_lock(&file_mutex);
             send_file_to_client(sock, file_path);
+            pthread_mutex_unlock(&file_mutex);
         } else if (command && strcmp(command, "RM") == 0 && file_path) {
+            pthread_mutex_lock(&file_mutex);
             remove_file(sock, file_path);
+            pthread_mutex_unlock(&file_mutex);
         } else {
             // If the command is not supported or the file path is missing
             printf("Unsupported command or missing file path.\n");

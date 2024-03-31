@@ -5,6 +5,9 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+// create a mutex 
+extern pthread_mutex_t file_mutex;
+
 // Function to create a directory if it does not already exist
 void create_dir_if_not_exists(const char *file_path);
 
