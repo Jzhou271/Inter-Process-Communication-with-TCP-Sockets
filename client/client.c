@@ -63,7 +63,7 @@ int main(int argc, char *argv[]) {
         char buffer[1024];
         sprintf(buffer, "RM %s", argv[2]);
         send(sock, buffer, strlen(buffer), 0);
-        send(sock, "\n", 1, 0);
+        // send(sock, "\n", 1, 0);
 
         char response[1024];
         int bytes_received = recv(sock, response, sizeof(response) - 1, 0);

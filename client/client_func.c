@@ -7,6 +7,7 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <libgen.h>
 
 // Function to check if a file exists
 bool file_exists(char *filename) {
@@ -27,6 +28,8 @@ void create_file(char *filepath) {
 
 // Function to send a file to the server
 void send_file(int sock, char *local_path, char *remote_path) {
+    create_dir_for_path(local_path);
+    
     // Attempt to create the file only if it does not exist
     if (!file_exists(local_path)) {
         create_file(local_path);
@@ -76,5 +79,17 @@ void receive_file(int sock, char *local_path) {
     }
 
     fclose(file);
+}
+
+void create_dir_for_path(const char *file_path) {
+  char *path_copy = strdup(file_path); // Create a modifiable copy of file_path
+  char *dir_path = dirname(path_copy); // Extract the directory path
+
+  struct stat st = {0};
+  if (stat(dir_path, &st) == -1) {
+    mkdir(dir_path, 0777); // Create the directory if it doesn't exist
+  }
+
+  free(path_copy); // Free the duplicated string
 }
 
