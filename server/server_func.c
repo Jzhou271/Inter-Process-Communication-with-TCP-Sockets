@@ -11,33 +11,88 @@
 #include <errno.h>
 #include <pthread.h>
 
-// Function to create a directory if it does not already exist
-void create_dir_if_not_exists(const char *file_path) {
-    char *path_copy = strdup(file_path);
-    char *dir_path = dirname(path_copy);
-    mkdir(dir_path, 0777);
+// recursively create directory if its path does not exist
+void create_dir_recursive(char *dir_path) {
+    if (access(dir_path, F_OK) == 0) {
+        // Path already exists
+        return;
+    }
+    char *path_copy = strdup(dir_path);
+    if (!path_copy) {
+        perror("Failed to duplicate path");
+        return;
+    }
+    for (char *p = strchr(path_copy + 1, '/'); p; p = strchr(p + 1, '/')) {
+        *p = '\0';
+        if (mkdir(path_copy, 0755) && errno != EEXIST) {
+            perror("Failed to create directory");
+            free(path_copy);
+            return;
+        }
+        *p = '/';
+    }
+    if (mkdir(path_copy, 0755) && errno != EEXIST) {
+        perror("Failed to create directory");
+    }
     free(path_copy);
 }
 
-// Function to write data received from socket into a file
-void write_file(int sock, const char *file_path) {
-    // Ensure the directory for the file exists
-    create_dir_if_not_exists(file_path);
-
-    // Check if the file already exists
-    if (access(file_path, F_OK) != -1) {
-        const char *errMsg = "ERROR: File already exists.\n";
-        send(sock, errMsg, strlen(errMsg), 0);
-        return;
+// get address of the file to be written
+FILE* create_new_file(const char *file_path) {
+    // if file address has duplicates
+    if (access(file_path, F_OK) == 0) {
+        if (remove(file_path) != 0) {
+            perror("Failed to remove exisiting file.\n");
+            return NULL;
+        } else {
+            printf("Duplicated file is found and overwritten.\n");
+        }
     }
 
-    // Attempt to open the file for writing
+    // Separate directory and base filename
+    char *path_copy = strdup(file_path);
+    if (!path_copy) {
+        perror("Failed to duplicate file_path");
+        return NULL;
+    }
+    char *dir_path = dirname(path_copy);
+
+    // Create directory recursively if it doesn't exist
+    create_dir_recursive(dir_path);
+
+    // Now, try to open the file
     FILE *file = fopen(file_path, "wb");
-    if (file == NULL) {
-        perror("Failed to open file for writing");
-        return;
+    if (!file) {
+        perror("Failed to open file");
     }
 
+    free(path_copy);
+    return file;
+}
+
+void clean_filename(char *filename) {
+    int i = 0;
+    while (filename[i] != '\0') {
+        if (filename[i] == '\n' || filename[i] == '\r' || filename[i] == '?') {
+            filename[i] = '\0';
+            break;
+        }
+        i++;
+    }
+}
+
+
+// Function to write data received from socket into a file
+void write_file(int sock, char *file_path) {
+    clean_filename(file_path);
+
+    FILE *file = create_new_file(file_path);
+
+    if (file == NULL) {
+        printf("%s\n", file_path);
+        perror("Failed to create a remote file on server.\n");
+        return;
+    }
     // Buffer to store data received from the client
     char buffer[1024];
     ssize_t bytes_received;
@@ -49,9 +104,8 @@ void write_file(int sock, const char *file_path) {
 
     fclose(file);
     
-    const char *successMsg = "File created successfully.\n";
-    send(sock, successMsg, strlen(successMsg), 0);
-
+    // const char *successMsg = "Remote file is created on server successfully.\n";
+    // send(sock, successMsg, strlen(successMsg), 0);
     printf("File sent successfully. Remote path: %s\n", file_path);
 }
 

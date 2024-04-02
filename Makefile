@@ -16,4 +16,4 @@ server/server: server/server.c server/server_func.c server/server.h
 
 # Clean up
 clean:
-	rm -f $(EXECUTABLES) client/local/* server/remote/*
+	rm -f $(EXECUTABLES) client/local/*

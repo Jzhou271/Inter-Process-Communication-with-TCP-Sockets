@@ -9,10 +9,10 @@
 extern pthread_mutex_t file_mutex;
 
 // Function to create a directory if it does not already exist
-void create_dir_if_not_exists(const char *file_path);
+void create_dir_if_not_exists(char *file_path);
 
 // Function to write data received from socket into a file
-void write_file(int sock, const char *file_path);
+void write_file(int sock, char *file_path);
 
 // Function to send a file to the client
 void send_file_to_client(int sock, const char *file_path);

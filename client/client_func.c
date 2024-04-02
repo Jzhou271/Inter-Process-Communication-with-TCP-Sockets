@@ -28,12 +28,10 @@ void create_file(char *filepath) {
 
 // Function to send a file to the server
 void send_file(int sock, char *local_path, char *remote_path) {
-    create_dir_for_path(local_path);
-    
-    // Attempt to create the file only if it does not exist
-    if (!file_exists(local_path)) {
-        create_file(local_path);
-        printf("File %s created successfully. Preparing to send...\n", local_path);
+
+    // If the file exists on the client 
+    // we will handle the file overwrite on the server side if file already exist on server 
+    if (file_exists(local_path)) {
 
         FILE *file = fopen(local_path, "rb");
         if (file == NULL) {
@@ -42,7 +40,7 @@ void send_file(int sock, char *local_path, char *remote_path) {
         }
 
         char buffer[1024];
-        sprintf(buffer, "WRITE %s", remote_path);
+        sprintf(buffer, "WRITE %s\n", remote_path);
         send(sock, buffer, strlen(buffer), 0);
 
         size_t read_bytes;
@@ -51,10 +49,10 @@ void send_file(int sock, char *local_path, char *remote_path) {
         }
 
         fclose(file);
-        printf("File sent successfully. Local path: %s, Remote path: %s\n", local_path, remote_path);
+        printf("File sent successfully from client to server.\n");
     } else {
-        // If the file already exists, don't send it.
-        printf("File %s already exists. Not sending.\n", local_path);
+        // if the local file does not exit, return error
+        printf("[ERROR]: File is NOT found on client.\n");
     }
 }
 
