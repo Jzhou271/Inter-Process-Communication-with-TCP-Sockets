@@ -118,53 +118,6 @@ void send_file(int sock, char *local_path, char *remote_path) {
 }
 
 // function to receive a file from
-// void receive_file(int sock, char *local_path) {
-//     clean_filename(local_path);
-
-//     // Check the status message first
-//     char statusMsg[1024] = {0};
-//     int bytes_received = recv(sock, statusMsg, 3, MSG_WAITALL);
-//     if (bytes_received <= 0) {
-//         printf("Error receiving status message or connection closed.\n");
-//         return;
-//     }
-
-//     // Ensure the message is null-terminated
-//     statusMsg[bytes_received] = '\0';
-
-//     // If we receive an error
-//     if (strcmp(statusMsg, "OK\n") != 0) {
-//         // Optionally, read the rest of the message or handle the error immediately
-//         printf("Received error message: %s\n", statusMsg);
-//         return;
-//     }
-
-//     // Additional byte for newline character
-//     char newline;
-//     recv(sock, &newline, 1, MSG_WAITALL); // Make sure to consume the newline character if using "OK\n"
-
-//     // If we receive an OK, continue to create file
-//     FILE *file = create_new_file(local_path);
-//     if (file == NULL) {
-//         perror("Failed to create a new file on client.\n");
-//         return;
-//     }
-
-//     char buffer[1024];
-//     while ((bytes_received = recv(sock, buffer, sizeof(buffer), 0)) > 0) {
-//         fwrite(buffer, 1, bytes_received, file);
-//     }
-
-//     if (bytes_received < 0) {
-//         // Handle the case where recv returns an error
-//         printf("Error receiving file.\n");
-//     } else {
-//         printf("File received successfully.\n");
-//     }
-
-//     fclose(file);
-// }
-
 void receive_file(int sock, char *local_path) {
     clean_filename(local_path);
 
@@ -172,7 +125,6 @@ void receive_file(int sock, char *local_path) {
     char statusMsg[1024] = {0};
     int total_bytes_received = 0, bytes_received;
     
-    // 尝试接收足够的字节以覆盖"OK\n"
     while (total_bytes_received < 3) { 
         bytes_received = recv(sock, statusMsg + total_bytes_received, 3 - total_bytes_received, 0);
         if (bytes_received <= 0) {
