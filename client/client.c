@@ -49,7 +49,7 @@ int main(int argc, char *argv[]) {
     else if (strcmp(argv[1], "GET") == 0) {
         // Determine local file path. If not provided, use the remote file name in the current directory.
         char *remote_path = argv[2];
-        char *local_path = argc == 4 ? argv[3] : strrchr(argv[2], '/') ? strrchr(argv[2], '/') + 1 : argv[2];
+        char *local_path = argc == 4 ? argv[3] : argv[2];
 
         // Send the GET command with the remote path to the server
         char buffer[1024];

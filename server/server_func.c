@@ -114,15 +114,14 @@ void send_file_to_client(int sock, const char *file_path) {
     // Attempt to open the file for reading
     FILE *file = fopen(file_path, "rb");
     if (file == NULL) {
-        perror("Failed to open file for reading");
-        printf("Attempted to open file: %s\n", file_path);
-        const char *errMsg = "ERROR: File does not exist.\n";
+        const char *errMsg = "ERROR: File does not exist on server.\n";
+        perror(errMsg);
         send(sock, errMsg, strlen(errMsg), 0);
         return;
     }
 
-    // Confirm the file was opened successfully
-    printf("Successfully opened file: %s for reading.\n", file_path);
+    const char *okMsg = "OK\n";
+    send(sock, okMsg, strlen(okMsg), 0); // means the content of the file will be sent
 
     // Buffer to store data read from the file
     char buffer[1024];
@@ -134,7 +133,6 @@ void send_file_to_client(int sock, const char *file_path) {
 
     fclose(file);
 
-    // 打印成功发送文件的消息
     printf("File '%s' sent to client successfully.\n", file_path);
 }
 
