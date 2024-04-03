@@ -9,6 +9,7 @@ typedef struct FileLock {
     char *filepath;
     pthread_mutex_t lock;
     struct FileLock *next;
+    int permission; // 0 is read only, 1 is read-write, -1 is NA
 } FileLock;
 
 // the head of file lock list
@@ -20,7 +21,7 @@ extern pthread_mutex_t mapLock;
 void create_dir_if_not_exists(char *file_path);
 
 // Function to write data received from socket into a file
-void write_file(int sock, char *file_path);
+void write_file(int sock, char *file_path, char *permission);
 
 // Function to send a file to the client
 void send_file_to_client(int sock, const char *file_path);
@@ -32,7 +33,7 @@ void remove_file(int sock, char *file_path);
 void *connection_handler(void *socket_desc);
 
 // find the file lock for a specific file
-pthread_mutex_t* getFileLock(const char* filepath);
+FileLock *getFileLock(const char* filepath, char *permission);
 
 
 

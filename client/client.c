@@ -9,10 +9,17 @@
 
 
 int main(int argc, char *argv[]) {
-    // Check if the command line arguments are correct
-    if (argc < 3) {
-        fprintf(stderr, "Usage: %s <command> <remote-file-path> [local-file-path]\n", argv[0]);
-        exit(1);
+
+    // command checking
+    if (strcmp(argv[1], "WRITE") == 1 && strcmp(argv[1], "GET") == 1 && strcmp(argv[1], "RM") == 1) {
+        printf("Invalid command.\n");
+        return 1;
+    }
+    // permission checking
+    if (strcmp(argv[1], "WRITE") == 0 &&
+        strcmp(argv[argc - 1], "RO") == 1 && strcmp(argv[argc - 1], "RW") == 1) {
+        printf("Invalid file permission.\n");
+        return 1;
     }
 
     int sock;
@@ -37,13 +44,14 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    puts("Connected\n");
+    puts("Connected");
 
     // Handle "WRITE" command
     if (strcmp(argv[1], "WRITE") == 0) {
         char *local_path = argv[2];
-        char *remote_path = argc == 4 ? argv[3] : argv[2];
-        send_file(sock, local_path, remote_path);
+        char *remote_path = argv[argc - 2];
+        char *permission = argv[argc - 1];
+        send_file(sock, local_path, remote_path, permission);
     }
     // Handle GET command 
     else if (strcmp(argv[1], "GET") == 0) {

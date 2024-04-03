@@ -52,7 +52,7 @@ int main() {
             continue;
         }
 
-        puts("Connection accepted");
+        puts("\nConnection accepted");
 
         int *thread_sock_ptr = malloc(sizeof(int));
         *thread_sock_ptr = new_sock;

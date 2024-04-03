@@ -86,9 +86,8 @@ void clean_filename(char *filename) {
     }
 }
 
-
 // Function to send a file to the server
-void send_file(int sock, char *local_path, char *remote_path) {
+void send_file(int sock, char *local_path, char *remote_path, char *permission) {
 
     // If the file exists on the client 
     // we will handle the file overwrite on the server side if file already exist on server 
@@ -101,7 +100,7 @@ void send_file(int sock, char *local_path, char *remote_path) {
         }
 
         char buffer[1024];
-        sprintf(buffer, "WRITE %s\n", remote_path);
+        sprintf(buffer, "WRITE %s %s\n", remote_path, permission);
         send(sock, buffer, strlen(buffer), 0);
 
         size_t read_bytes;
@@ -110,7 +109,7 @@ void send_file(int sock, char *local_path, char *remote_path) {
         }
 
         fclose(file);
-        printf("File sent successfully from client to server.\n");
+        printf("File sent successfully from client to server.\n\n");
     } else {
         // if the local file does not exit, return error
         printf("[ERROR]: File is NOT found on client.\n");

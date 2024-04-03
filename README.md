@@ -44,3 +44,22 @@ We have tested all scenarios when sending requests to the server via the command
 2. We created an unique file mutex for each file on the server, in order to protect file data when multi-threads tring to access its data.
 
 3. To test it. We send two commands from two clients. One is to write file, another is to delete the same file. We assume that deletion will be pending before the write command is done, since they are modifying the same file on the server.
+
+
+<br>
+
+### 4. Permission Management
+File permission is set when a file is first created on the server.
+```
+./client WRITE <local> <remote> <permission>
+./client WRITE <local> <permission>
+```
+#### `RO (Read-Only)`
+- `Write` to a new file on server => SUCCESS
+- `Write` to an exsiting file on server => FAIL
+- `Get` the file from server => SUCCESS
+- `Remove` the file from server => FAIL
+
+
+#### `RW (Read-Write)`
+- All commands can execute successfully.

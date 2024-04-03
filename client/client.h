@@ -10,7 +10,7 @@ bool file_exists(char *filename);
 void create_file(char *filepath);
 
 // Function to send a file to the server
-void send_file(int sock, char *local_path, char *remote_path);
+void send_file(int sock, char *local_path, char *remote_path, char *permission);
 
 // Function to receive a file from the server
 void receive_file(int sock, char *local_path);
