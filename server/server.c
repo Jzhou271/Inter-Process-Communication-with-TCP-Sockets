@@ -9,16 +9,8 @@
 #include <unistd.h>
 #include <pthread.h>
 
-// create a mutex 
-pthread_mutex_t file_mutex;
 
 int main() {
-    // initialize mutex
-    if (pthread_mutex_init(&file_mutex, NULL) != 0) {
-        printf("Mutex init failed\n");
-        return 1;
-    }
-
     int socket_desc, new_sock, c;
     struct sockaddr_in server, client;
 
@@ -77,8 +69,6 @@ int main() {
     // Close the socket before shutting down
     close(socket_desc);
     puts("Server shutting down");
-    // destroy mutex
-    pthread_mutex_destroy(&file_mutex);
 
     return 0;
 }

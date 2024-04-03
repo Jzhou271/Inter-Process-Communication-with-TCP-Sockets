@@ -11,6 +11,69 @@
 #include <errno.h>
 #include <pthread.h>
 
+// the head of file lock list
+FileLock *fileLocks = NULL;
+// the global mutex used to protect the lock list
+pthread_mutex_t mapLock = PTHREAD_MUTEX_INITIALIZER;
+
+// function to get file lock for a specific file
+pthread_mutex_t* getFileLock(const char* filepath) {
+    pthread_mutex_lock(&mapLock);
+
+    FileLock *current = fileLocks;
+    while (current != NULL) {
+        if (strcmp(current->filepath, filepath) == 0) {
+            pthread_mutex_unlock(&mapLock);
+            return &(current->lock);
+        }
+        current = current->next;
+    }
+
+    // if the file lock is not found, create a new one
+    FileLock *newLock = (FileLock *)malloc(sizeof(FileLock));
+    newLock->filepath = strdup(filepath);
+    pthread_mutex_init(&(newLock->lock), NULL);
+    newLock->next = fileLocks;
+    fileLocks = newLock;
+
+    pthread_mutex_unlock(&mapLock);
+    return &(newLock->lock);
+}
+
+void *connection_handler(void *socket_desc) {
+    // Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    free(socket_desc);
+    char client_message[2000];
+
+    // Receive a message from client
+    ssize_t read_size = recv(sock, client_message, sizeof(client_message) - 1, 0);
+    if (read_size > 0) {
+        // Null terminate the string
+        client_message[read_size] = '\0';
+
+        // Parse the command and the file path from the received message
+        char *command = strtok(client_message, " ");
+        char *file_path = strtok(NULL, " ");
+
+        // Determine the command (WRITE, GET, RM) and execute the corresponding function
+        if (command && strcmp(command, "WRITE") == 0 && file_path) {
+            write_file(sock, file_path);
+        } else if (command && strcmp(command, "GET") == 0 && file_path) {
+            send_file_to_client(sock, file_path);
+        } else if (command && strcmp(command, "RM") == 0 && file_path) {
+            remove_file(sock, file_path);
+        } else {
+            // If the command is not supported or the file path is missing
+            printf("Unsupported command or missing file path.\n");
+        }
+    }
+
+    close(sock);
+    puts("Client disconnected");
+    return NULL;
+}
+
 // recursively create directory if its path does not exist
 void create_dir_recursive(char *dir_path) {
     if (access(dir_path, F_OK) == 0) {
@@ -81,10 +144,18 @@ void clean_filename(char *filename) {
     }
 }
 
-
 // Function to write data received from socket into a file
 void write_file(int sock, char *file_path) {
     clean_filename(file_path);
+
+    // get file lock before writing to the file
+    pthread_mutex_t *fileMutex = getFileLock(file_path);
+
+    if (pthread_mutex_trylock(fileMutex) == EBUSY) {
+        printf("The file %s is being used, waiting to be unlocked...\n", file_path);
+    }
+    pthread_mutex_lock(fileMutex);
+    printf("Mutex locked. The file is ready to be written.\n");
 
     FILE *file = create_new_file(file_path);
 
@@ -103,10 +174,11 @@ void write_file(int sock, char *file_path) {
     }
 
     fclose(file);
-    
-    // const char *successMsg = "Remote file is created on server successfully.\n";
-    // send(sock, successMsg, strlen(successMsg), 0);
     printf("File sent successfully. Remote path: %s\n", file_path);
+
+    // This is for testing mutithread
+    // sleep(10);
+    pthread_mutex_unlock(fileMutex);
 }
 
 // Function to send a file to the client
@@ -137,7 +209,18 @@ void send_file_to_client(int sock, const char *file_path) {
 }
 
 // Function to remove a file and notify the client of the result
-void remove_file(int sock, const char *file_path) {
+void remove_file(int sock, char *file_path) {
+    clean_filename(file_path);
+
+    // get file lock before writing to the file
+    pthread_mutex_t *fileMutex = getFileLock(file_path);
+
+    if (pthread_mutex_trylock(fileMutex) == EBUSY) {
+        printf("The file %s is being used, waiting to be unlocked...\n", file_path);
+    }
+    pthread_mutex_lock(fileMutex);
+    printf("Mutex locked. The file %s is ready to be removed.\n", file_path);       
+
     // Check if the file exists
     if (access(file_path, F_OK) != -1) {
         // Attempt to remove the file
@@ -156,45 +239,6 @@ void remove_file(int sock, const char *file_path) {
         send(sock, noFileMessage, strlen(noFileMessage), 0);
         printf("Attempted to remove non-existing file: %s\n", file_path);
     }
-}
 
-
-void *connection_handler(void *socket_desc) {
-    // Get the socket descriptor
-    int sock = *(int*)socket_desc;
-    free(socket_desc);
-    char client_message[2000];
-
-    // Receive a message from client
-    ssize_t read_size = recv(sock, client_message, sizeof(client_message) - 1, 0);
-    if (read_size > 0) {
-        // Null terminate the string
-        client_message[read_size] = '\0';
-
-        // Parse the command and the file path from the received message
-        char *command = strtok(client_message, " ");
-        char *file_path = strtok(NULL, " ");
-
-        // Determine the command (WRITE, GET, RM) and execute the corresponding function
-        if (command && strcmp(command, "WRITE") == 0 && file_path) {
-            pthread_mutex_lock(&file_mutex);
-            write_file(sock, file_path);
-            pthread_mutex_unlock(&file_mutex);
-        } else if (command && strcmp(command, "GET") == 0 && file_path) {
-            pthread_mutex_lock(&file_mutex);
-            send_file_to_client(sock, file_path);
-            pthread_mutex_unlock(&file_mutex);
-        } else if (command && strcmp(command, "RM") == 0 && file_path) {
-            pthread_mutex_lock(&file_mutex);
-            remove_file(sock, file_path);
-            pthread_mutex_unlock(&file_mutex);
-        } else {
-            // If the command is not supported or the file path is missing
-            printf("Unsupported command or missing file path.\n");
-        }
-    }
-
-    close(sock);
-    puts("Client disconnected");
-    return NULL;
+    pthread_mutex_unlock(fileMutex);
 }
