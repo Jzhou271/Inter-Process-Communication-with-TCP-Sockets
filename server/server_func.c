@@ -17,6 +17,17 @@ FileLock *fileLocks = NULL;
 // the global mutex used to protect the lock list
 pthread_mutex_t mapLock = PTHREAD_MUTEX_INITIALIZER;
 
+// Function to check if a file exist
+int file_exists(const char *file_path) {
+    struct stat buffer;
+    int exist = stat(file_path, &buffer);
+    if (exist == 0) {
+        return 1; // exist
+    } else {
+        return 0; // does not exist
+    }
+}
+
 // function to get file lock for a specific file
 FileLock* getFileLock(const char* filepath, char *permission) {
     pthread_mutex_lock(&mapLock);
@@ -253,6 +264,46 @@ void remove_file(int sock, char *file_path) {
     pthread_mutex_unlock(fileMutex);
 }
 
+// Function to check the permission of a file
+void check_permission(int sock, char *file_path) {
+    clean_command(file_path);
+
+    if (!file_exists(file_path)) {
+        send(sock, "ERROR: File does not exist on server.\n", 37, 0);
+        return;
+    }
+
+    // get or create file lock
+    FileLock *the_lock = getFileLock(file_path, "NA");
+
+    // find permission from file lock
+    char *permMessage;
+    if (the_lock->permission == 0) {
+        permMessage = "Read-Only";
+    } else if (the_lock->permission == 1) {
+        permMessage = "Read-Write";
+    } else {
+        // file does not exist
+        send(sock, "ERROR: File does not exist on server.\n", 37, 0);
+        return;
+    }
+
+    char *separator = " | ";
+    int messageLength = strlen(file_path) + strlen(separator) + strlen(permMessage) + 1; // +1 for the null terminator
+    char *message = (char *)malloc(messageLength * sizeof(char));
+    if (message == NULL) {
+        printf("Memory allocation failed for message.\n");
+        return;
+    }
+    // construct message
+    strcpy(message, file_path);
+    strcat(message, separator);
+    strcat(message, permMessage);
+
+    send(sock, message, strlen(message), 0);
+    free(message);
+}
+
 void *connection_handler(void *socket_desc) {
     // Get the socket descriptor
     int sock = *(int*)socket_desc;
@@ -277,6 +328,8 @@ void *connection_handler(void *socket_desc) {
             send_file_to_client(sock, file_path);
         } else if (command && strcmp(command, "RM") == 0 && file_path) {
             remove_file(sock, file_path);
+        } else if (command && strcmp(command, "LS") == 0 && file_path) {
+            check_permission(sock, file_path);
         } else {
             // If the command is not supported or the file path is missing
             printf("Unsupported command or missing file path.\n");

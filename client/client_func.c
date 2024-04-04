@@ -116,7 +116,7 @@ void send_file(int sock, char *local_path, char *remote_path, char *permission) 
     }
 }
 
-// function to receive a file from
+// Function to receive a file from the server
 void receive_file(int sock, char *local_path) {
     clean_filename(local_path);
 
@@ -165,6 +165,17 @@ void receive_file(int sock, char *local_path) {
     fclose(file);
 }
 
+// Function to check file permission from the server
+void receive_permission(int sock) {
+    char buffer[1024] = {0};
+    ssize_t bytesReceived = recv(sock, buffer, sizeof(buffer) - 1, 0);
+    if (bytesReceived <= 0) {
+        perror("recv failed or connection closed");
+        return;
+    }
+    buffer[bytesReceived] = '\0';
+    printf("%s\n", buffer);
+}
 
 
 

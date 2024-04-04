@@ -15,6 +15,9 @@ void send_file(int sock, char *local_path, char *remote_path, char *permission);
 // Function to receive a file from the server
 void receive_file(int sock, char *local_path);
 
+// Function to check file permission from the server
+void receive_permission(int sock);
+
 void create_dir_for_path(const char *file_path);
 
 #endif // CLINET_H

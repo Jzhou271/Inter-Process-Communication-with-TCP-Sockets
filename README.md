@@ -35,6 +35,12 @@ We have tested all scenarios when sending requests to the server via the command
 - `remote` file does not exsit on server => (file not found)
 - `remote` file exists on server => (delete)
 
+#### `LS`
+```
+./client LS <remote>
+```
+- `remote` file does not exsit on server => (file not found)
+- `remote` file exists on server => (display permission)
 
 <br>
 

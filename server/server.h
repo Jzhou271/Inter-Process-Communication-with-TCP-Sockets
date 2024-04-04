@@ -17,8 +17,6 @@ extern FileLock *fileLocks;
 // the global mutex used to protect the lock list
 extern pthread_mutex_t mapLock; 
 
-// Function to create a directory if it does not already exist
-void create_dir_if_not_exists(char *file_path);
 
 // Function to write data received from socket into a file
 void write_file(int sock, char *file_path, char *permission);

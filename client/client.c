@@ -33,7 +33,7 @@ int main(int argc, char *argv[]) {
             printf("Too much arguments\n");
             return 1;
         }
-    } else if (strcmp(argv[1], "RM") == 0) {
+    } else if (strcmp(argv[1], "RM") == 0 || strcmp(argv[1], "LS") == 0) {
         if (argc < 3) {
             printf("Lack of file permission\n");
             return 1;
@@ -102,15 +102,24 @@ int main(int argc, char *argv[]) {
         char buffer[1024];
         sprintf(buffer, "RM %s", argv[2]);
         send(sock, buffer, strlen(buffer), 0);
-        // send(sock, "\n", 1, 0);
-
         char response[1024];
         int bytes_received = recv(sock, response, sizeof(response) - 1, 0);
         if (bytes_received > 0) {
             response[bytes_received] = '\0';
             printf("%s", response);
         }
-    } else {
+    }
+    // Handle LS command
+    else if (strcmp(argv[1], "LS") == 0) {
+        char *remote_path = argv[2];
+        // Send the LS command with the remote path to the server
+        char buffer[1024];
+        sprintf(buffer, "LS %s", remote_path);
+        send(sock, buffer, strlen(buffer), 0);
+        // Wait and receive the file
+        receive_permission(sock);
+    }
+    else {
         printf("Unsupported command.\n");
     }
 
