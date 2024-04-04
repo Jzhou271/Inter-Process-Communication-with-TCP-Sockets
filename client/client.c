@@ -10,14 +10,45 @@
 
 int main(int argc, char *argv[]) {
 
+    // instruction
+    if (argc < 3) {
+        fprintf(stderr, "Usage: %s <command> <remote-file-path> <local-file-path> <permission>\n", argv[0]);
+        return 1;
+    }
+
     // command checking
-    if (strcmp(argv[1], "WRITE") == 1 && strcmp(argv[1], "GET") == 1 && strcmp(argv[1], "RM") == 1) {
+    if (strcmp(argv[1], "WRITE") == 0) {
+        if (argc < 4) {
+            printf("Lack of file permission\n");
+            return 1;
+        } else if (argc > 5) {
+            printf("Too much arguments\n");
+            return 1;
+        }
+    } else if (strcmp(argv[1], "GET") == 0) {
+        if (argc < 3) {
+            printf("Lack of file permission\n");
+            return 1;
+        } else if (argc > 4) {
+            printf("Too much arguments\n");
+            return 1;
+        }
+    } else if (strcmp(argv[1], "RM") == 0) {
+        if (argc < 3) {
+            printf("Lack of file permission\n");
+            return 1;
+        } else if (argc > 3) {
+            printf("Too much arguments\n");
+            return 1;
+        }
+    } else {
         printf("Invalid command.\n");
         return 1;
     }
+
     // permission checking
     if (strcmp(argv[1], "WRITE") == 0 &&
-        strcmp(argv[argc - 1], "RO") == 1 && strcmp(argv[argc - 1], "RW") == 1) {
+        strcmp(argv[argc - 1], "RO") != 0 && strcmp(argv[argc - 1], "RW") != 0) {
         printf("Invalid file permission.\n");
         return 1;
     }
