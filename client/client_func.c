@@ -176,7 +176,3 @@ void receive_permission(int sock) {
     buffer[bytesReceived] = '\0';
     printf("%s\n", buffer);
 }
-
-
-
-
