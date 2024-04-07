@@ -12,11 +12,14 @@ typedef struct FileLock {
     int permission; // 0 is read only, 1 is read-write, -1 is NA
 } FileLock;
 
+typedef struct {
+  char grid[5][5];
+} PolybiusTable_t;
+
 // the head of file lock list
 extern FileLock *fileLocks;
 // the global mutex used to protect the lock list
 extern pthread_mutex_t mapLock; 
-
 
 // Function to write data received from socket into a file
 void write_file(int sock, char *file_path, char *permission);
@@ -33,6 +36,14 @@ void *connection_handler(void *socket_desc);
 // find the file lock for a specific file
 FileLock *getFileLock(const char* filepath, char *permission);
 
+// initialize the Polybius table
+void initializePolybiusTable(PolybiusTable_t *table);
+
+// Function to encode plaintext
+char *pbEncode(const char *plaintext, const PolybiusTable_t *table);
+
+// Function to decode plaintext
+char *pbDecode(const char *ciphertext, const PolybiusTable_t *table);
 
 
 #endif // SERVER_H

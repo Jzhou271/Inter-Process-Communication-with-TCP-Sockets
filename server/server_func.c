@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <ctype.h>
 
 // the head of file lock list
 FileLock *fileLocks = NULL;
@@ -149,7 +150,7 @@ void write_file(int sock, char *file_path, char *permission) {
     pthread_mutex_t *fileMutex = &(the_lock->lock);
     int perm = the_lock->permission;
 
-    // // check if thread is busy
+    // check if thread is busy
     bool lockAcquired = false;
     while (!lockAcquired) {
         // if the mutex lock can be required
@@ -170,13 +171,26 @@ void write_file(int sock, char *file_path, char *permission) {
         pthread_mutex_unlock(fileMutex);
         return;
     }
+
+    // PolybiusTable initialization
+    PolybiusTable_t table;
+    initializePolybiusTable(&table);
+
     // Buffer to store data received from the client
     char buffer[1024];
     ssize_t bytes_received;
+    printf("Ready to receive and write data for file: %s\n", file_path);
+
     // Receive data until there is no more to read
     while ((bytes_received = recv(sock, buffer, sizeof(buffer), 0)) > 0) {
-        // Write the received data to the file
-        fwrite(buffer, 1, bytes_received, file);
+        buffer[bytes_received] = '\0';
+        char *encrypted_buffer = pbEncode(buffer, &table);
+        if (encrypted_buffer) {
+            printf("Encrypted data: %s\n", encrypted_buffer);
+            // Write the received data to the file
+            fwrite(encrypted_buffer, 1, strlen(encrypted_buffer), file);
+            free(encrypted_buffer);
+        }
     }
 
     fclose(file);
@@ -191,27 +205,36 @@ void write_file(int sock, char *file_path, char *permission) {
 void send_file_to_client(int sock, const char *file_path) {
     // Attempt to open the file for reading
     FILE *file = fopen(file_path, "rb");
-    if (file == NULL) {
+    if (!file) {
+        printf("ERROR: File '%s' does not exist on server.\n", file_path);
         const char *errMsg = "ERROR: File does not exist on server.\n";
-        perror(errMsg);
         send(sock, errMsg, strlen(errMsg), 0);
         return;
     }
+    printf("File '%s' opened successfully for sending.\n", file_path);
 
     const char *okMsg = "OK\n";
     send(sock, okMsg, strlen(okMsg), 0); // means the content of the file will be sent
 
+    // PolybiusTable initialization
+    PolybiusTable_t table;
+    initializePolybiusTable(&table);
+
     // Buffer to store data read from the file
-    char buffer[1024];
+    char encrypted_buffer[1024];
     size_t read_bytes;
-    // Read from the file and send to the client until there's nothing left to read
-    while ((read_bytes = fread(buffer, 1, sizeof(buffer), file)) > 0) {
-        send(sock, buffer, read_bytes, 0);
+    while ((read_bytes = fread(encrypted_buffer, 1, sizeof(encrypted_buffer) - 1, file)) > 0) {
+        encrypted_buffer[read_bytes] = '\0'; // Ensure null-termination
+        char *decrypted = pbDecode(encrypted_buffer, &table);
+        if (decrypted) {
+            printf("Decrypted data to send: '%s'\n", decrypted); // Printing decrypted data
+            send(sock, decrypted, strlen(decrypted), 0);
+            free(decrypted);
+        }
     }
 
     fclose(file);
-
-    printf("File '%s' sent to client successfully.\n", file_path);
+    printf("File '%s' has been sent to client successfully.\n", file_path);
 }
 
 // Function to remove a file and notify the client of the result
@@ -339,4 +362,68 @@ void *connection_handler(void *socket_desc) {
     close(sock);
     puts("Client disconnected");
     return NULL;
+}
+
+// Function to initialize the Polybius table
+void initializePolybiusTable(PolybiusTable_t *table) {
+    char grid[5][5] = {
+        {'A', 'B', 'C', 'D', 'E'},
+        {'F', 'G', 'H', 'I', 'K'},
+        {'L', 'M', 'N', 'O', 'P'},
+        {'Q', 'R', 'S', 'T', 'U'},
+        {'V', 'W', 'X', 'Y', 'Z'}
+    };
+    memcpy(table->grid, grid, sizeof(grid));
+}
+
+// Function to encode plaintext
+char *pbEncode(const char *plaintext, const PolybiusTable_t *table) {
+    // Allocate enough memory space to save the encrypted text
+    char *encoded = malloc(strlen(plaintext) * 2 + 1);
+    if (!encoded) return NULL;
+
+    int j = 0;
+    for (int i = 0; plaintext[i] != '\0'; ++i) {
+        char ch = toupper(plaintext[i]);
+        if (isalpha(ch)) {
+            bool found = false;
+            for (int row = 0; row < 5 && !found; ++row) {
+                for (int col = 0; col < 5; ++col) {
+                    if (table->grid[row][col] == ch || (ch == 'I' && table->grid[row][col] == 'J')) {
+                        encoded[j++] = '1' + row;
+                        encoded[j++] = '1' + col;
+                        found = true;
+                        break;
+                    }
+                }
+            }
+        } else {
+            // Add non-alphabetic characters to the encrypted text without encoding
+            encoded[j++] = plaintext[i];
+        }
+    }
+    encoded[j] = '\0';
+    return encoded;
+}
+
+// Function to decode plaintext
+char *pbDecode(const char *ciphertext, const PolybiusTable_t *table) {
+    // Allocate enough memory space to save the encrypted text
+    char *decoded = malloc(strlen(ciphertext) + 1); // Allocate enough space for the decoded text
+    if (!decoded) return NULL;
+
+    int j = 0;
+    for (int i = 0; i < strlen(ciphertext); ++i) {
+        if (isdigit(ciphertext[i]) && i + 1 < strlen(ciphertext) && isdigit(ciphertext[i + 1])) {
+            int row = ciphertext[i] - '1';
+            int col = ciphertext[i + 1] - '1';
+            decoded[j++] = tolower(table->grid[row][col]);
+            i++;
+        } else {
+            // Add non-encoded characters directly to the result
+            decoded[j++] = ciphertext[i];
+        }
+    }
+    decoded[j] = '\0';
+    return decoded;
 }

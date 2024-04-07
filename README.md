@@ -75,6 +75,32 @@ Write another file with permission Read-Only to the server.
 
 <br>
 
+
+#### `Encryption and Decryption`
+
+***Test WRITE Operation with Encryption*** <br>
+```
+Files ecp1.txt, ecp2.txt, ecp3.txt, ecp4.txt are located in the local data folder. We now WRITE these four files into remote folders using the encryption model. Execute the following commands:
+    ./client WRITE data/ecp1.txt remote_doc/1.txt RW
+    ./client WRITE data/ecp2.txt remote_doc/2.txt RW
+    ./client WRITE data/ecp3.txt remote_doc/3.txt RW
+    ./client WRITE data/ecp4.txt remote_doc/4.txt RW
+After executing these commands, check the remote_doc directory. The files 1.txt, 2.txt, 3.txt, 4.txt will contain encrypted numerical data.
+```
+
+
+***Test GET Operation with Decryption*** <br>
+```
+In the remote_doc directory on the server, the files 1.txt, 2.txt, 3.txt, 4.txt contain encrypted numerical data. The following steps describe how to GET these files into local directories while maintaining encryption.
+Execute the following commands to retrieve the files:
+    ./client GET remote_doc/1.txt local/a1.txt
+    ./client GET remote_doc/2.txt local/a2.txt
+    ./client GET remote_doc/3.txt local/a3.txt
+    ./client GET remote_doc/4.txt local/a4.txt
+After successfully executing these commands, the local folder will contain a1.txt, a2.txt, a3.txt, a4.txt will will decrypted the original text file contents.
+```
+
+
 ### 3. Multithread
 1. We created an unique thread for each client's request to the server.
 
