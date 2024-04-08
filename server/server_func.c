@@ -336,6 +336,11 @@ void check_permission(int sock, char *file_path) {
     free(message);
 }
 
+void stop_server() {
+    printf("Server closed.\n");
+    _exit(0);
+}
+
 void *connection_handler(void *socket_desc) {
     // Get the socket descriptor
     int sock = *(int*)socket_desc;
@@ -362,6 +367,8 @@ void *connection_handler(void *socket_desc) {
             remove_file(sock, file_path);
         } else if (command && strcmp(command, "LS") == 0 && file_path) {
             check_permission(sock, file_path);
+        } else if (command && strcmp(command, "STOP") == 0) {
+            stop_server();
         } else {
             // If the command is not supported or the file path is missing
             printf("Unsupported command or missing file path.\n");

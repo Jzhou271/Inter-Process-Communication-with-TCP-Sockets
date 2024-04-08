@@ -10,6 +10,7 @@
 #define CLINET_H
 
 #include <stdbool.h>
+#include <stdio.h>
 
 // Function to check if a file exists
 bool file_exists(char *filename);

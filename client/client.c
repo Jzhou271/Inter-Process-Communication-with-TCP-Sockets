@@ -17,11 +17,17 @@
 
 
 int main(int argc, char *argv[]) {
-
     // instruction
-    if (argc < 3) {
+    if (argc == 1) {
         fprintf(stderr, "Usage: %s <command> <remote-file-path> <local-file-path> <permission>\n", argv[0]);
         return 1;
+    }
+
+    if (argc == 2) {
+        if (strcmp(argv[1], "STOP") != 0) {
+            printf("Invalid command.\n");
+            return 1;
+        }
     }
 
     // command checking
@@ -46,6 +52,11 @@ int main(int argc, char *argv[]) {
             printf("Lack of file permission\n");
             return 1;
         } else if (argc > 3) {
+            printf("Too much arguments\n");
+            return 1;
+        }
+    } else if (strcmp(argv[1], "STOP") == 0) {
+        if (argc > 2) {
             printf("Too much arguments\n");
             return 1;
         }
@@ -126,6 +137,12 @@ int main(int argc, char *argv[]) {
         send(sock, buffer, strlen(buffer), 0);
         // Wait and receive the file
         receive_permission(sock);
+    }
+    // Handle STOP command
+    else if (strcmp(argv[1], "STOP") == 0) {
+        char buffer[1024];
+        sprintf(buffer, "STOP");
+        send(sock, buffer, strlen(buffer), 0);
     }
     else {
         printf("Unsupported command.\n");
