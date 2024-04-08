@@ -1,3 +1,11 @@
+/*
+ * server.h / Practicum 2
+ *
+ * Kaicheng Jia & Jing Zhou / CS5600 / Northeastern University
+ * Spring 2024 / Apr 8, 2024
+ *
+ */
+
 #ifndef SERVER_H
 #define SERVER_H
 
@@ -18,6 +26,7 @@ typedef struct {
 
 // the head of file lock list
 extern FileLock *fileLocks;
+
 // the global mutex used to protect the lock list
 extern pthread_mutex_t mapLock; 
 

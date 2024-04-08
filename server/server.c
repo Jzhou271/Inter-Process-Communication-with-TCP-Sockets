@@ -1,3 +1,11 @@
+/*
+ * server.c / Practicum 2
+ *
+ * Kaicheng Jia & Jing Zhou / CS5600 / Northeastern University
+ * Spring 2024 / Apr 8, 2024
+ *
+ */
+
 #include "server.h"
 #include <arpa/inet.h>
 #include <libgen.h>

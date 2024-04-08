@@ -1,3 +1,11 @@
+/*
+ * server_func.c / Practicum 2
+ *
+ * Kaicheng Jia & Jing Zhou / CS5600 / Northeastern University
+ * Spring 2024 / Apr 8, 2024
+ *
+ */
+
 #include "server.h"
 #include <arpa/inet.h>
 #include <libgen.h>
@@ -15,6 +23,7 @@
 
 // the head of file lock list
 FileLock *fileLocks = NULL;
+
 // the global mutex used to protect the lock list
 pthread_mutex_t mapLock = PTHREAD_MUTEX_INITIALIZER;
 
