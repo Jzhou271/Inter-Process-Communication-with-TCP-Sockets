@@ -73,6 +73,18 @@ Write another file with permission Read-Only to the server.
 (2) ./client LS data/book.txt
 ```
 
+
+#### `STOP`
+```
+./client STOP
+```
+Close server.
+
+***Test STOP*** <br>
+```
+./client STOP
+```
+
 <br>
 
 
