@@ -401,11 +401,11 @@ char *pbEncode(const char *plaintext, const PolybiusTable_t *table) {
     int j = 0;
     for (int i = 0; plaintext[i] != '\0'; ++i) {
         char ch = toupper(plaintext[i]);
-        if (isalpha(ch)) {
+        if (isalpha(ch) && ch != 'J') {
             bool found = false;
             for (int row = 0; row < 5 && !found; ++row) {
                 for (int col = 0; col < 5; ++col) {
-                    if (table->grid[row][col] == ch || (ch == 'I' && table->grid[row][col] == 'J')) {
+                    if (table->grid[row][col] == ch) {
                         encoded[j++] = '1' + row;
                         encoded[j++] = '1' + col;
                         found = true;
@@ -414,7 +414,7 @@ char *pbEncode(const char *plaintext, const PolybiusTable_t *table) {
                 }
             }
         } else {
-            // Add non-alphabetic characters to the encrypted text without encoding
+            // Add non-alphabetic characters, including 'J', to the encrypted text without encoding
             encoded[j++] = plaintext[i];
         }
     }
@@ -424,8 +424,8 @@ char *pbEncode(const char *plaintext, const PolybiusTable_t *table) {
 
 // Function to decode plaintext
 char *pbDecode(const char *ciphertext, const PolybiusTable_t *table) {
-    // Allocate enough memory space to save the encrypted text
-    char *decoded = malloc(strlen(ciphertext) + 1); // Allocate enough space for the decoded text
+    // Allocate enough memory space to save the decrypted text
+    char *decoded = malloc(strlen(ciphertext) + 1);
     if (!decoded) return NULL;
 
     int j = 0;
@@ -436,8 +436,8 @@ char *pbDecode(const char *ciphertext, const PolybiusTable_t *table) {
             decoded[j++] = tolower(table->grid[row][col]);
             i++;
         } else {
-            // Add non-encoded characters directly to the result
-            decoded[j++] = ciphertext[i];
+            // For non-alphabetic characters, including 'J', add them to the decoded text without modification
+            decoded[j++] = tolower(ciphertext[i]);
         }
     }
     decoded[j] = '\0';
